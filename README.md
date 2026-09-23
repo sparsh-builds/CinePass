@@ -63,10 +63,6 @@ MOVIETICKETBOOKINGSYSTEM
 * File Handling
 * Dependency Injection
 
-## Author
+## Developer
 
-Padma Sahitya Pavuluri
-
-## Assignment
-
-Developed as part of the DotNet Full Stack Training – Phase 1 Assignment.
+Developed By Sparsh Garg as a .NET project learning

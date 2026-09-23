@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CinePass — Movie Ticket Booking</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50 py-4 px-6 flex justify-between items-center">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl font-black tracking-tight text-indigo-400">CINE<span class="text-white">PASS</span></span>
+      <span class="text-xs uppercase bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-mono border border-indigo-500/30">.NET Core Engine</span>
+    </div>
+    <span class="text-xs text-slate-400">Live API: <span class="text-emerald-400 font-mono">Connected</span></span>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-6 space-y-8">
+    <div class="text-center space-y-2 py-4">
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Reserve Your Cinema Seats</h1>
+      <p class="text-slate-400 text-sm max-w-lg mx-auto">High-concurrency ticket reservation engine running on ASP.NET Core & Docker.</p>
+    </div>
+
+    <!-- Movies Grid -->
+    <section>
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-slate-200">
+        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path></svg>
+        Featured Movies
+      </h2>
+      <div id="moviesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="p-8 text-center text-slate-500 bg-slate-900 rounded-xl border border-slate-800 col-span-full">Loading available movies from .NET backend...</div>
+      </div>
+    </section>
+
+    <!-- Booking Panel -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 max-w-2xl mx-auto shadow-2xl">
+      <h3 class="text-lg font-bold mb-6 text-white border-b border-slate-800 pb-3">Instant Checkout Engine</h3>
+      <form id="bookingForm" class="space-y-4">
+        <div>
+          <label class="block text-xs uppercase font-semibold text-slate-400 mb-1">Select Customer</label>
+          <select id="customerSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none"></select>
+        </div>
+        <div>
+          <label class="block text-xs uppercase font-semibold text-slate-400 mb-1">Select Show</label>
+          <select id="showSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs uppercase font-semibold text-slate-400 mb-1">Seats Count</label>
+            <input id="ticketCount" type="number" min="1" value="2" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs uppercase font-semibold text-slate-400 mb-1">Payment Method</label>
+            <select id="paymentChoice" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none">
+              <option value="1">UPI Instant</option>
+              <option value="2">Card Gateway</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="bookBtn" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 font-semibold py-3 rounded-lg transition-all text-sm tracking-wide shadow-lg shadow-indigo-600/30">
+          Confirm & Allocate Seat Lock
+        </button>
+      </form>
+      <div id="bookingResult" class="mt-4 text-xs font-mono hidden p-3 rounded border"></div>
+    </section>
+  </main>
+
+  <script>
+    async function init() {
+      try {
+        const [moviesRes, showsRes, custRes] = await Promise.all([
+          fetch('/movies'),
+          fetch('/shows'),
+          fetch('/customers')
+        ]);
+        const movies = await moviesRes.json();
+        const shows = await showsRes.json();
+        const customers = await custRes.json();
+
+        // Render Movies
+        const moviesContainer = document.getElementById('moviesContainer');
+        moviesContainer.innerHTML = movies.map(m => `
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition">
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs uppercase bg-slate-800 px-2 py-0.5 rounded text-slate-300">${m.language || 'English'}</span>
+              <span class="text-indigo-400 font-bold">₹${m.ticketPrice}</span>
+            </div>
+            <h4 class="font-bold text-lg text-white">${m.title}</h4>
+            <p class="text-xs text-slate-400 mt-1">Duration: ${m.duration} mins</p>
+          </div>
+        `).join('');
+
+        // Populate Shows
+        const showSelect = document.getElementById('showSelect');
+        showSelect.innerHTML = shows.map(s => `
+          <option value="${s.id}">Show #${s.id} — ${s.movie?.title || 'Movie'} @ ${s.theater?.name || 'Theater'} (${s.showTime})</option>
+        `).join('');
+
+        // Populate Customers
+        const custSelect = document.getElementById('customerSelect');
+        custSelect.innerHTML = customers.map(c => `
+          <option value="${c.id}">${c.name} (Wallet: ₹${c.walletBalance})</option>
+        `).join('');
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('bookBtn');
+      const resDiv = document.getElementById('bookingResult');
+      btn.disabled = true;
+      btn.innerText = 'Locking Seat...';
+
+      const customerId = document.getElementById('customerSelect').value;
+      const showId = document.getElementById('showSelect').value;
+      const count = document.getElementById('ticketCount').value;
+      const payment = document.getElementById('paymentChoice').value;
+
+      try {
+        const res = await fetch(`/book?customerId=${customerId}&showId=${showId}&ticketCount=${count}&paymentChoice=${payment}`, {
+          method: 'POST'
+        });
+        const data = await res.json();
+        resDiv.classList.remove('hidden');
+        if (res.ok) {
+          resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-emerald-950/60 border-emerald-800 text-emerald-300';
+          resDiv.innerText = `Success: Ticket Booked! Booking confirmed with transaction record.`;
+        } else {
+          resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/60 border-rose-800 text-rose-300';
+          resDiv.innerText = `Error: ${data.error || 'Failed to book'}`;
+        }
+      } catch (err) {
+        resDiv.classList.remove('hidden');
+        resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/60 border-rose-800 text-rose-300';
+        resDiv.innerText = 'Network error contacting backend.';
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Confirm & Allocate Seat Lock';
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

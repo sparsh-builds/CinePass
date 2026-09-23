@@ -3,7 +3,7 @@ using CinePass.Interfaces;
 using CinePass.Models;
 using CinePass.Services;
 
-namespace MOVIETICKETBOOKINGSYSTEM;
+namespace CinePass;
 
 public class Program
 {
@@ -24,6 +24,11 @@ public class Program
         // 2. Start lightweight Web Server for Render
         var builder = WebApplication.CreateBuilder(args);
         var app = builder.Build();
+
+        app.UseDefaultFiles();
+        app.UseStaticFiles();
+
+        
 
         app.MapGet("/", () => "CinePass Ticket Booking Engine API is Live on Render!");
 

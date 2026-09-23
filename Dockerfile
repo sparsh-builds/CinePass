@@ -19,4 +19,5 @@ COPY Data/ ./Data/
 ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "CinePass.dll"]
+# Auto-detect the exact compiled DLL name dynamically
+CMD ["sh", "-c", "dotnet $(ls *.dll | head -n 1)"]

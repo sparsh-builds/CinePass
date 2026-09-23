@@ -15,7 +15,7 @@ COPY --from=build /app/publish .
 
 # Data folder copy for text files
 COPY Data/ ./Data/
-COPY frontend/ ./frontend/
+COPY wwwroot/ ./wwwroot/
 
 ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080

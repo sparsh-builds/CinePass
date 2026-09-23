@@ -3,169 +3,495 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CinePass — Movie Ticket Booking</title>
+  <title>CinePass — Next-Gen Cinema Reservation Engine</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#6366f1',
+            dark: '#0b0f19',
+            surface: '#111827',
+            border: '#1f293d'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .screen-curve {
+      height: 36px;
+      border-top: 4px solid #6366f1;
+      border-radius: 50% 50% 0 0;
+      box-shadow: 0 -12px 25px -4px rgba(99, 102, 241, 0.4);
+    }
+    .seat {
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .seat:not(.booked):hover {
+      transform: scale(1.15);
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    .animate-glow {
+      animation: pulse-glow 2.5s infinite;
+    }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
-  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50 py-4 px-6 flex justify-between items-center">
-    <div class="flex items-center gap-2">
-      <span class="text-2xl font-black tracking-tight text-indigo-400">CINE<span class="text-white">PASS</span></span>
-      <span class="text-xs uppercase bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-mono border border-indigo-500/30">.NET Core Engine</span>
-    </div>
-    <span class="text-xs text-slate-400">Live API: <span class="text-emerald-400 font-mono">Connected</span></span>
-  </header>
+<body class="bg-dark text-slate-100 min-h-screen font-sans antialiased selection:bg-brand selection:text-white">
 
-  <main class="max-w-6xl mx-auto p-6 space-y-8">
-    <div class="text-center space-y-2 py-4">
-      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Reserve Your Cinema Seats</h1>
-      <p class="text-slate-400 text-sm max-w-lg mx-auto">High-concurrency ticket reservation engine running on ASP.NET Core & Docker.</p>
-    </div>
+  <!-- Top Navigation Bar -->
+  <nav class="border-b border-border bg-dark/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand to-violet-500 flex items-center justify-center shadow-lg shadow-brand/20">
+          <i class="fa-solid fa-film text-white text-lg"></i>
+        </div>
+        <div>
+          <span class="text-xl font-black tracking-tight text-white">CINE<span class="text-brand">PASS</span></span>
+          <span class="ml-2 text-[10px] font-mono uppercase bg-brand/10 text-brand px-2 py-0.5 rounded border border-brand/20 font-bold">Enterprise .NET 8</span>
+        </div>
+      </div>
 
-    <!-- Movies Grid -->
+      <!-- Active User Profile & Live Balance -->
+      <div class="flex items-center gap-4">
+        <div class="bg-surface border border-border rounded-xl px-3.5 py-1.5 flex items-center gap-3">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+          <div class="text-xs">
+            <span class="text-slate-400 block text-[10px] font-mono leading-none">ACTIVE USER</span>
+            <select id="userDropdown" class="bg-transparent font-semibold text-white focus:outline-none cursor-pointer mt-0.5 text-xs">
+              <option value="">Loading accounts...</option>
+            </select>
+          </div>
+          <div class="border-l border-border pl-3 text-right">
+            <span class="text-slate-400 block text-[10px] font-mono leading-none">WALLET</span>
+            <span id="userWallet" class="text-emerald-400 font-bold font-mono text-xs">₹0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto p-6 space-y-10">
+
+    <!-- Step 1: Featured Movies Slider -->
     <section>
-      <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-slate-200">
-        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path></svg>
-        Featured Movies
-      </h2>
-      <div id="moviesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="p-8 text-center text-slate-500 bg-slate-900 rounded-xl border border-slate-800 col-span-full">Loading available movies from .NET backend...</div>
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+            <i class="fa-solid fa-clapperboard text-brand text-lg"></i> Currently Showing
+          </h2>
+          <p class="text-xs text-slate-400">Select a film to view theater venues and schedule times</p>
+        </div>
+      </div>
+
+      <div id="moviesList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="col-span-full py-12 text-center text-slate-500 font-mono text-sm bg-surface rounded-2xl border border-border">
+          <i class="fa-solid fa-circle-notch fa-spin text-brand text-2xl mb-2"></i>
+          <p>Fetching movies from ASP.NET microservice...</p>
+        </div>
       </div>
     </section>
 
-    <!-- Booking Panel -->
-    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 max-w-2xl mx-auto shadow-2xl">
-      <h3 class="text-lg font-bold mb-6 text-white border-b border-slate-800 pb-3">Instant Checkout Engine</h3>
-      <form id="bookingForm" class="space-y-4">
-        <div>
-          <label class="block text-xs uppercase font-semibold text-slate-400 mb-1">Select Customer</label>
-          <select id="customerSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none"></select>
-        </div>
-        <div>
-          <label class="block text-xs uppercase font-semibold text-slate-400 mb-1">Select Show</label>
-          <select id="showSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none"></select>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
+    <!-- Step 2: Interactive Cinema Seating Deck -->
+    <section id="bookingDeck" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- Seating Matrix -->
+      <div class="lg:col-span-8 bg-surface border border-border rounded-2xl p-6 sm:p-8 relative shadow-2xl overflow-hidden">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-border gap-4">
           <div>
-            <label class="block text-xs uppercase font-semibold text-slate-400 mb-1">Seats Count</label>
-            <input id="ticketCount" type="number" min="1" value="2" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none">
+            <span id="selectedShowBadge" class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-brand/20 text-brand border border-brand/30">Active Selection</span>
+            <h3 id="deckTitle" class="text-xl font-bold text-white mt-1">Movie & Cinema Name</h3>
+            <p id="deckSubtitle" class="text-xs text-slate-400">Time: --:-- | Hall: Audi 1</p>
           </div>
-          <div>
-            <label class="block text-xs uppercase font-semibold text-slate-400 mb-1">Payment Method</label>
-            <select id="paymentChoice" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-indigo-500 focus:outline-none">
-              <option value="1">UPI Instant</option>
-              <option value="2">Card Gateway</option>
-            </select>
+          <!-- Show Timing Switcher -->
+          <div id="showsContainer" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Cinema Screen Simulation -->
+        <div class="my-8 max-w-lg mx-auto text-center">
+          <div class="screen-curve mb-3"></div>
+          <span class="text-[10px] font-mono tracking-[0.25em] text-slate-400 uppercase">Cinema Screen View</span>
+        </div>
+
+        <!-- Visual Seat Grid -->
+        <div class="flex justify-center overflow-x-auto py-4">
+          <div id="seatMatrix" class="grid grid-cols-8 gap-2.5 sm:gap-3 p-2 bg-dark/50 rounded-2xl border border-border"></div>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex items-center justify-center gap-6 mt-8 pt-6 border-t border-border text-xs text-slate-400 font-mono">
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-md bg-slate-800 border border-slate-700"></span> Available
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-md bg-brand text-white text-[9px] flex items-center justify-center font-bold">✓</span> Selected
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-md bg-rose-950/70 border border-rose-800/80"></span> Occupied
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkout & Summary Card -->
+      <div class="lg:col-span-4 bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-6 sticky top-24">
+        <h4 class="font-bold text-base text-white flex items-center gap-2 border-b border-border pb-4">
+          <i class="fa-solid fa-receipt text-brand"></i> Booking Summary
+        </h4>
+
+        <div class="space-y-3 text-sm">
+          <div class="flex justify-between text-slate-400">
+            <span>Ticket Base Price:</span>
+            <span id="ticketPriceLabel" class="text-white font-mono">₹0</span>
+          </div>
+          <div class="flex justify-between text-slate-400">
+            <span>Allocated Seats:</span>
+            <span id="selectedSeatsLabel" class="text-brand font-mono font-semibold">None</span>
+          </div>
+          <div class="flex justify-between text-slate-400">
+            <span>Seat Count:</span>
+            <span id="seatCountLabel" class="text-white font-mono">0</span>
+          </div>
+          <div class="flex justify-between text-slate-400">
+            <span>Convenience Tax (5%):</span>
+            <span id="taxLabel" class="text-white font-mono">₹0.00</span>
+          </div>
+          <div class="border-t border-border pt-3 flex justify-between items-baseline font-bold">
+            <span class="text-slate-200">Total Payable:</span>
+            <span id="totalCostLabel" class="text-2xl text-emerald-400 font-mono font-black">₹0</span>
           </div>
         </div>
 
-        <button type="submit" id="bookBtn" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 font-semibold py-3 rounded-lg transition-all text-sm tracking-wide shadow-lg shadow-indigo-600/30">
-          Confirm & Allocate Seat Lock
+        <div class="space-y-3 pt-2">
+          <label class="block text-xs uppercase font-mono text-slate-400">Payment Channel</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="paymentOption" value="1" checked class="peer sr-only">
+              <div class="p-3 text-center rounded-xl border border-border bg-dark peer-checked:border-brand peer-checked:bg-brand/10 transition">
+                <i class="fa-solid fa-bolt text-brand mb-1 block"></i>
+                <span class="text-xs font-semibold text-white">Instant UPI</span>
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="paymentOption" value="2" class="peer sr-only">
+              <div class="p-3 text-center rounded-xl border border-border bg-dark peer-checked:border-brand peer-checked:bg-brand/10 transition">
+                <i class="fa-solid fa-credit-card text-slate-400 peer-checked:text-brand mb-1 block"></i>
+                <span class="text-xs font-semibold text-white">Credit Card</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <button id="checkoutBtn" disabled class="w-full bg-slate-800 text-slate-400 cursor-not-allowed font-semibold py-3.5 rounded-xl transition-all duration-200 text-sm tracking-wide flex items-center justify-center gap-2">
+          Select Seats to Proceed
         </button>
-      </form>
-      <div id="bookingResult" class="mt-4 text-xs font-mono hidden p-3 rounded border"></div>
+
+        <div id="bookingStatus" class="hidden text-xs font-mono p-4 rounded-xl border"></div>
+      </div>
     </section>
   </main>
 
+  <!-- Reservation Confirmation Modal -->
+  <div id="ticketModal" class="fixed inset-0 bg-dark/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-surface border border-border max-w-sm w-full rounded-2xl p-6 shadow-2xl text-center space-y-4 relative">
+      <div class="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-2xl border border-emerald-500/30">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white">Booking Confirmed!</h3>
+      <p id="modalMsg" class="text-xs text-slate-400"></p>
+
+      <div class="bg-dark border border-dashed border-border rounded-xl p-4 text-left font-mono text-xs space-y-2">
+        <div class="flex justify-between"><span class="text-slate-400">Ref ID:</span><span id="modalId" class="text-brand font-bold">#----</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Movie:</span><span id="modalMovie" class="text-white">---</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Seats:</span><span id="modalSeats" class="text-emerald-400">---</span></div>
+      </div>
+
+      <button onclick="closeModal()" class="w-full bg-brand hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition text-sm">
+        Done & Close
+      </button>
+    </div>
+  </div>
+
   <script>
-    async function init() {
+    let state = {
+      movies: [],
+      shows: [],
+      customers: [],
+      currentCustomer: null,
+      currentShow: null,
+      selectedSeats: new Set()
+    };
+
+    const rows = ['A', 'B', 'C', 'D', 'E'];
+    const cols = [1, 2, 3, 4, 5, 6, 7, 8];
+
+    async function initApp() {
       try {
-        const [moviesRes, showsRes, custRes] = await Promise.all([
+        const [movRes, showRes, custRes] = await Promise.all([
           fetch('/movies'),
           fetch('/shows'),
           fetch('/customers')
         ]);
-        const movies = await moviesRes.json();
-        const shows = await showsRes.json();
-        const customers = await custRes.json();
 
-        // Render Movies
-        const moviesContainer = document.getElementById('moviesContainer');
-        moviesContainer.innerHTML = (movies || []).map(m => {
-          const title = m.title || m.Title || 'Movie';
-          const lang = m.language || m.Language || 'Standard';
-          const price = m.ticketPrice || m.TicketPrice || 200;
-          const duration = m.duration || m.Duration || 120;
-          return `
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition">
-              <div class="flex justify-between items-start mb-2">
-                <span class="text-xs uppercase bg-slate-800 px-2 py-0.5 rounded text-slate-300">${lang}</span>
-                <span class="text-indigo-400 font-bold">₹${price}</span>
-              </div>
-              <h4 class="font-bold text-lg text-white">${title}</h4>
-              <p class="text-xs text-slate-400 mt-1">Duration: ${duration} mins</p>
-            </div>
-          `;
-        }).join('');
+        state.movies = await movRes.json();
+        state.shows = await showRes.json();
+        state.customers = await custRes.json();
 
-        // Populate Shows
-        const showSelect = document.getElementById('showSelect');
-        showSelect.innerHTML = (shows || []).map(s => {
-          const sId = s.id || s.Id;
-          const sTime = s.showTime || s.ShowTime || '';
-          const mTitle = s.movie?.title || s.Movie?.Title || 'Movie';
-          const tName = s.theater?.name || s.Theater?.Name || 'Cinema';
-          return `<option value="${sId}">Show #${sId} — ${mTitle} @ ${tName} (${sTime})</option>`;
-        }).join('');
+        renderUserDropdown();
+        renderMovies();
 
-        // Populate Customers
-        const custSelect = document.getElementById('customerSelect');
-        custSelect.innerHTML = (customers || []).map(c => {
-          const cId = c.id || c.Id;
-          const cName = c.name || c.Name;
-          const cBal = c.walletBalance || c.WalletBalance || 0;
-          return `<option value="${cId}">${cName} (Wallet: ₹${cBal})</option>`;
-        }).join('');
-
+        if (state.shows.length > 0) {
+          selectShow(state.shows[0].id || state.shows[0].Id);
+        }
       } catch (err) {
-        console.error("Init Error:", err);
+        console.error("Initialization Failed:", err);
       }
     }
 
-    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = document.getElementById('bookBtn');
-  const resDiv = document.getElementById('bookingResult');
-  btn.disabled = true;
-  btn.innerText = 'Allocating Seats...';
+    function renderUserDropdown() {
+      const select = document.getElementById('userDropdown');
+      select.innerHTML = state.customers.map(c => {
+        const id = c.id || c.Id;
+        const name = c.name || c.Name;
+        return `<option value="${id}">${name}</option>`;
+      }).join('');
 
-  const payload = {
-    customerId: parseInt(document.getElementById('customerSelect').value, 10),
-    showId: parseInt(document.getElementById('showSelect').value, 10),
-    ticketCount: parseInt(document.getElementById('ticketCount').value, 10),
-    paymentChoice: parseInt(document.getElementById('paymentChoice').value, 10)
-  };
+      select.addEventListener('change', (e) => {
+        state.currentCustomer = state.customers.find(c => (c.id || c.Id) == e.target.value);
+        updateUserUI();
+      });
 
-  try {
-    const res = await fetch('/book', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    const data = await res.json();
-    resDiv.classList.remove('hidden');
-
-    if (res.ok && data.success) {
-      resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-emerald-950/70 border-emerald-800 text-emerald-300';
-      resDiv.innerText = `✓ ${data.message} (Booking ID: #${data.bookingId} | Remaining Balance: ₹${data.remainingBalance})`;
-      await init();
-    } else {
-      resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
-      resDiv.innerText = `✗ Rejection: ${data.error || 'Server rejected booking request'}`;
+      if (state.customers.length > 0) {
+        state.currentCustomer = state.customers[0];
+        updateUserUI();
+      }
     }
-  } catch (err) {
-    resDiv.classList.remove('hidden');
-    resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
-    resDiv.innerText = `Network/Serialization Error: ${err.message}`;
-  } finally {
-    btn.disabled = false;
-    btn.innerText = 'Confirm & Allocate Seat Lock';
-  }
-});
 
-    init();
+    function updateUserUI() {
+      if (!state.currentCustomer) return;
+      const bal = state.currentCustomer.walletBalance || state.currentCustomer.WalletBalance || 0;
+      document.getElementById('userWallet').innerText = `₹${parseFloat(bal).toFixed(2)}`;
+    }
+
+    function renderMovies() {
+      const container = document.getElementById('moviesList');
+      if (!state.movies.length) {
+        container.innerHTML = `<div class="col-span-full p-4 text-center text-amber-400">No movies found in database.</div>`;
+        return;
+      }
+
+      container.innerHTML = state.movies.map(m => {
+        const id = m.id || m.Id;
+        const title = m.title || m.Title;
+        const lang = m.language || m.Language || 'Standard';
+        const price = m.ticketPrice || m.TicketPrice || 250;
+        const duration = m.duration || m.Duration || 120;
+
+        return `
+          <div onclick="filterShowsByMovie(${id})" class="group cursor-pointer bg-surface hover:bg-slate-900 border border-border hover:border-brand/60 rounded-2xl p-5 transition-all duration-200 hover:-translate-y-1 shadow-lg">
+            <div class="h-36 rounded-xl bg-gradient-to-tr from-slate-900 via-indigo-950/40 to-slate-800 flex items-center justify-center mb-4 border border-border group-hover:border-brand/40">
+              <i class="fa-solid fa-film text-3xl text-brand/60 group-hover:text-brand transition"></i>
+            </div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] uppercase font-mono font-bold bg-dark px-2 py-0.5 rounded text-slate-300 border border-border">${lang}</span>
+              <span class="text-emerald-400 font-bold font-mono text-sm">₹${price}</span>
+            </div>
+            <h4 class="font-bold text-base text-white group-hover:text-brand transition line-clamp-1">${title}</h4>
+            <p class="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
+              <i class="fa-regular fa-clock text-[10px]"></i> ${duration} mins
+            </p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterShowsByMovie(movieId) {
+      const matchingShow = state.shows.find(s => {
+        const m = s.movie || s.Movie;
+        return (m.id || m.Id) === movieId;
+      });
+      if (matchingShow) {
+        selectShow(matchingShow.id || matchingShow.Id);
+      }
+    }
+
+    function selectShow(showId) {
+      state.currentShow = state.shows.find(s => (s.id || s.Id) == showId);
+      state.selectedSeats.clear();
+      document.getElementById('bookingDeck').classList.remove('hidden');
+
+      const movie = state.currentShow.movie || state.currentShow.Movie;
+      const theater = state.currentShow.theater || state.currentShow.Theater;
+      const time = state.currentShow.showTime || state.currentShow.ShowTime;
+
+      document.getElementById('deckTitle').innerText = movie.title || movie.Title;
+      document.getElementById('deckSubtitle').innerText = `${theater.name || theater.Name} (${theater.location || theater.Location}) • ${time}`;
+      document.getElementById('ticketPriceLabel').innerText = `₹${movie.ticketPrice || movie.TicketPrice}`;
+
+      // Render show times tabs
+      const showsContainer = document.getElementById('showsContainer');
+      const movieShows = state.shows.filter(s => {
+        const m = s.movie || s.Movie;
+        return (m.id || m.Id) === (movie.id || movie.Id);
+      });
+
+      showsContainer.innerHTML = movieShows.map(s => {
+        const sid = s.id || s.Id;
+        const active = sid === (state.currentShow.id || state.currentShow.Id);
+        return `
+          <button onclick="selectShow(${sid})" class="px-3 py-1.5 rounded-lg font-mono text-xs border transition ${active ? 'bg-brand text-white border-brand shadow-lg shadow-brand/20 font-bold' : 'bg-dark border-border text-slate-400 hover:text-white'}">
+            ${s.showTime || s.ShowTime}
+          </button>
+        `;
+      }).join('');
+
+      renderSeatGrid();
+      updateCheckoutDetails();
+    }
+
+    function renderSeatGrid() {
+      const grid = document.getElementById('seatMatrix');
+      grid.innerHTML = '';
+
+      // Deterministic pseudo-booked seats
+      const bookedIndices = [3, 7, 12, 19, 27, 34];
+
+      let seatIndex = 0;
+      rows.forEach(r => {
+        cols.forEach(c => {
+          const seatCode = `${r}${c}`;
+          const isBooked = bookedIndices.includes(seatIndex);
+          const isSelected = state.selectedSeats.has(seatCode);
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.disabled = isBooked;
+
+          let classes = 'seat w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-[10px] font-mono font-bold flex items-center justify-center transition border ';
+          if (isBooked) {
+            classes += 'bg-slate-900 border-slate-800 text-slate-700 cursor-not-allowed booked';
+          } else if (isSelected) {
+            classes += 'bg-brand text-white border-brand shadow-lg shadow-brand/40 scale-105';
+          } else {
+            classes += 'bg-dark border-border text-slate-400 hover:border-brand/70 hover:text-white';
+          }
+
+          btn.className = classes;
+          btn.innerText = seatCode;
+          btn.onclick = () => toggleSeat(seatCode);
+          grid.appendChild(btn);
+          seatIndex++;
+        });
+      });
+    }
+
+    function toggleSeat(seatCode) {
+      if (state.selectedSeats.has(seatCode)) {
+        state.selectedSeats.delete(seatCode);
+      } else {
+        if (state.selectedSeats.size >= 8) {
+          alert('Maximum 8 seats per transaction limit.');
+          return;
+        }
+        state.selectedSeats.add(seatCode);
+      }
+      renderSeatGrid();
+      updateCheckoutDetails();
+    }
+
+    function updateCheckoutDetails() {
+      const count = state.selectedSeats.size;
+      const movie = state.currentShow.movie || state.currentShow.Movie;
+      const price = parseFloat(movie.ticketPrice || movie.TicketPrice || 250);
+
+      const subtotal = count * price;
+      const tax = count > 0 ? (subtotal * 0.05) : 0;
+      const total = subtotal + tax;
+
+      document.getElementById('seatCountLabel').innerText = count;
+      document.getElementById('selectedSeatsLabel').innerText = count > 0 ? Array.from(state.selectedSeats).join(', ') : 'None';
+      document.getElementById('taxLabel').innerText = `₹${tax.toFixed(2)}`;
+      document.getElementById('totalCostLabel').innerText = `₹${total.toFixed(0)}`;
+
+      const checkoutBtn = document.getElementById('checkoutBtn');
+      if (count > 0) {
+        checkoutBtn.disabled = false;
+        checkoutBtn.className = 'w-full bg-brand hover:bg-indigo-600 text-white font-semibold py-3.5 rounded-xl transition duration-150 text-sm tracking-wide shadow-xl shadow-brand/30 cursor-pointer';
+        checkoutBtn.innerHTML = `<i class="fa-solid fa-lock mr-2"></i> Reserve ${count} Seat(s) • ₹${total.toFixed(0)}`;
+      } else {
+        checkoutBtn.disabled = true;
+        checkoutBtn.className = 'w-full bg-slate-800 text-slate-500 cursor-not-allowed font-semibold py-3.5 rounded-xl transition-all duration-150 text-sm tracking-wide';
+        checkoutBtn.innerText = 'Select Seats to Proceed';
+      }
+    }
+
+    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('checkoutBtn');
+      const statusDiv = document.getElementById('bookingStatus');
+      const paymentChoice = document.querySelector('input[name="paymentOption"]:checked').value;
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Locking Seats via API...`;
+
+      const payload = {
+        customerId: parseInt(state.currentCustomer.id || state.currentCustomer.Id),
+        showId: parseInt(state.currentShow.id || state.currentShow.Id),
+        ticketCount: state.selectedSeats.size,
+        paymentChoice: parseInt(paymentChoice)
+      };
+
+      try {
+        const res = await fetch('/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        statusDiv.classList.remove('hidden');
+
+        if (res.ok && data.success) {
+          statusDiv.className = 'text-xs font-mono p-4 rounded-xl border bg-emerald-950/70 border-emerald-800 text-emerald-300';
+          statusDiv.innerText = `✓ ${data.message}`;
+
+          // Update user balance locally
+          state.currentCustomer.walletBalance = data.remainingBalance;
+          updateUserUI();
+
+          // Open confirmation modal
+          const movie = state.currentShow.movie || state.currentShow.Movie;
+          document.getElementById('modalId').innerText = `#${data.bookingId}`;
+          document.getElementById('modalMovie').innerText = movie.title || movie.Title;
+          document.getElementById('modalSeats').innerText = Array.from(state.selectedSeats).join(', ');
+          document.getElementById('modalMsg').innerText = `Transaction finalized. E-ticket successfully generated.`;
+          document.getElementById('ticketModal').classList.remove('hidden');
+
+          state.selectedSeats.clear();
+          renderSeatGrid();
+          updateCheckoutDetails();
+        } else {
+          statusDiv.className = 'text-xs font-mono p-4 rounded-xl border bg-rose-950/70 border-rose-800 text-rose-300';
+          statusDiv.innerText = `✗ Rejection: ${data.error || 'Booking execution failed'}`;
+        }
+      } catch (err) {
+        statusDiv.classList.remove('hidden');
+        statusDiv.className = 'text-xs font-mono p-4 rounded-xl border bg-rose-950/70 border-rose-800 text-rose-300';
+        statusDiv.innerText = `Network Exception: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-lock mr-2"></i> Reserve Seats`;
+      }
+    });
+
+    function closeModal() {
+      document.getElementById('ticketModal').classList.add('hidden');
+    }
+
+    initApp();
   </script>
 </body>
 </html>

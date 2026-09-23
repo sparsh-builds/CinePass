@@ -1,6 +1,6 @@
-using MOVIETICKETBOOKINGSYSTEM.Interfaces;
+using CinePass.Interfaces;
 
-namespace MOVIETICKETBOOKINGSYSTEM.Services;
+namespace CinePass.Services;
 
 public class EmailNotificationService : INotificationService
 {

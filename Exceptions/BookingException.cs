@@ -1,4 +1,4 @@
-namespace MOVIETICKETBOOKINGSYSTEM.Exceptions;
+namespace CinePass.Exceptions;
 
 public class BookingException : Exception
 {

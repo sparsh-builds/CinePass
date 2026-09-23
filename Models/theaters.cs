@@ -1,4 +1,4 @@
-namespace MOVIETICKETBOOKINGSYSTEM.Models;
+namespace CinePass.Models;
 
 public class Theater : BaseEntity
 {

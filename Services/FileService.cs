@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace MOVIETICKETBOOKINGSYSTEM.Services;
+namespace CinePass.Services;
 
 public class FileService
 {

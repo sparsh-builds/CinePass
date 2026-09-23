@@ -1,8 +1,8 @@
-using MOVIETICKETBOOKINGSYSTEM.Exceptions;
-using MOVIETICKETBOOKINGSYSTEM.Interfaces;
-using MOVIETICKETBOOKINGSYSTEM.Models;
+using CinePass.Exceptions;
+using CinePass.Interfaces;
+using CinePass.Models;
 
-namespace MOVIETICKETBOOKINGSYSTEM.Services;
+namespace CinePass.Services;
 
 public class BookingService
 {

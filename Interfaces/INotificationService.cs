@@ -1,4 +1,4 @@
-namespace MOVIETICKETBOOKINGSYSTEM.Interfaces;
+namespace CinePass.Interfaces;
 
 public interface INotificationService
 {

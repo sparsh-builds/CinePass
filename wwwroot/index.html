@@ -80,77 +80,53 @@
 
         // Render Movies
         const moviesContainer = document.getElementById('moviesContainer');
-        moviesContainer.innerHTML = movies.map(m => `
-          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition">
-            <div class="flex justify-between items-start mb-2">
-              <span class="text-xs uppercase bg-slate-800 px-2 py-0.5 rounded text-slate-300">${m.language || 'English'}</span>
-              <span class="text-indigo-400 font-bold">₹${m.ticketPrice}</span>
+        moviesContainer.innerHTML = (movies || []).map(m => {
+          const title = m.title || m.Title || 'Movie';
+          const lang = m.language || m.Language || 'Standard';
+          const price = m.ticketPrice || m.TicketPrice || 200;
+          const duration = m.duration || m.Duration || 120;
+          return `
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-indigo-500/50 transition">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-xs uppercase bg-slate-800 px-2 py-0.5 rounded text-slate-300">${lang}</span>
+                <span class="text-indigo-400 font-bold">₹${price}</span>
+              </div>
+              <h4 class="font-bold text-lg text-white">${title}</h4>
+              <p class="text-xs text-slate-400 mt-1">Duration: ${duration} mins</p>
             </div>
-            <h4 class="font-bold text-lg text-white">${m.title}</h4>
-            <p class="text-xs text-slate-400 mt-1">Duration: ${m.duration} mins</p>
-          </div>
-        `).join('');
+          `;
+        }).join('');
 
         // Populate Shows
         const showSelect = document.getElementById('showSelect');
-        showSelect.innerHTML = shows.map(s => `
-          <option value="${s.id}">Show #${s.id} — ${s.movie?.title || 'Movie'} @ ${s.theater?.name || 'Theater'} (${s.showTime})</option>
-        `).join('');
+        showSelect.innerHTML = (shows || []).map(s => {
+          const sId = s.id || s.Id;
+          const sTime = s.showTime || s.ShowTime || '';
+          const mTitle = s.movie?.title || s.Movie?.Title || 'Movie';
+          const tName = s.theater?.name || s.Theater?.Name || 'Cinema';
+          return `<option value="${sId}">Show #${sId} — ${mTitle} @ ${tName} (${sTime})</option>`;
+        }).join('');
 
         // Populate Customers
         const custSelect = document.getElementById('customerSelect');
-        custSelect.innerHTML = customers.map(c => `
-          <option value="${c.id}">${c.name} (Wallet: ₹${c.walletBalance})</option>
-        `).join('');
+        custSelect.innerHTML = (customers || []).map(c => {
+          const cId = c.id || c.Id;
+          const cName = c.name || c.Name;
+          const cBal = c.walletBalance || c.WalletBalance || 0;
+          return `<option value="${cId}">${cName} (Wallet: ₹${cBal})</option>`;
+        }).join('');
 
       } catch (err) {
-        console.error(err);
+        console.error("Init Error:", err);
       }
     }
 
     document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = document.getElementById('bookBtn');
-  const resDiv = document.getElementById('bookingResult');
-  btn.disabled = true;
-  btn.innerText = 'Allocating Seats...';
-
-  const customerId = document.getElementById('customerSelect').value;
-  const showId = document.getElementById('showSelect').value;
-  const count = document.getElementById('ticketCount').value;
-  const payment = document.getElementById('paymentChoice').value;
-
-  try {
-    const res = await fetch(`/book?customerId=${customerId}&showId=${showId}&ticketCount=${count}&paymentChoice=${payment}`, {
-      method: 'POST'
-    });
-    
-    const data = await res.json();
-    resDiv.classList.remove('hidden');
-
-    if (res.ok) {
-      resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-emerald-950/70 border-emerald-800 text-emerald-300';
-      resDiv.innerText = `✓ ${data.message || 'Seat reservation successful!'}`;
-      // Refresh customer balances in UI dropdown
-      init();
-    } else {
-      resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
-      resDiv.innerText = `✗ Rejection: ${data.error || 'Booking constraint failed'}`;
-    }
-  } catch (err) {
-    resDiv.classList.remove('hidden');
-    resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
-    resDiv.innerText = `Network/Serialization Error: ${err.message}`;
-  } finally {
-    btn.disabled = false;
-    btn.innerText = 'Confirm & Allocate Seat Lock';
-  }
-});
       e.preventDefault();
       const btn = document.getElementById('bookBtn');
       const resDiv = document.getElementById('bookingResult');
       btn.disabled = true;
-      btn.innerText = 'Locking Seat...';
+      btn.innerText = 'Allocating Seats...';
 
       const customerId = document.getElementById('customerSelect').value;
       const showId = document.getElementById('showSelect').value;
@@ -161,24 +137,27 @@
         const res = await fetch(`/book?customerId=${customerId}&showId=${showId}&ticketCount=${count}&paymentChoice=${payment}`, {
           method: 'POST'
         });
+        
         const data = await res.json();
         resDiv.classList.remove('hidden');
+
         if (res.ok) {
-          resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-emerald-950/60 border-emerald-800 text-emerald-300';
-          resDiv.innerText = `Success: Ticket Booked! Booking confirmed with transaction record.`;
+          resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-emerald-950/70 border-emerald-800 text-emerald-300';
+          resDiv.innerText = `✓ ${data.message || 'Seat reservation successful!'}`;
+          await init();
         } else {
-          resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/60 border-rose-800 text-rose-300';
-          resDiv.innerText = `Error: ${data.error || 'Failed to book'}`;
+          resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
+          resDiv.innerText = `✗ Rejection: ${data.error || 'Booking constraint failed'}`;
         }
       } catch (err) {
         resDiv.classList.remove('hidden');
-        resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/60 border-rose-800 text-rose-300';
-        resDiv.innerText = 'Network error contacting backend.';
+        resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
+        resDiv.innerText = `Network/Serialization Error: ${err.message}`;
       } finally {
         btn.disabled = false;
         btn.innerText = 'Confirm & Allocate Seat Lock';
       }
-    ;
+    });
 
     init();
   </script>

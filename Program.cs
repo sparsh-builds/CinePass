@@ -28,9 +28,9 @@ public class Program
         app.UseDefaultFiles();
         app.UseStaticFiles();
 
-        
 
-        app.MapGet("/", () => "CinePass Ticket Booking Engine API is Live on Render!");
+
+        
 
         app.MapGet("/movies", () => movies);
         app.MapGet("/theaters", () => theaters);

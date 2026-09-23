@@ -109,6 +109,43 @@
     }
 
     document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('bookBtn');
+  const resDiv = document.getElementById('bookingResult');
+  btn.disabled = true;
+  btn.innerText = 'Allocating Seats...';
+
+  const customerId = document.getElementById('customerSelect').value;
+  const showId = document.getElementById('showSelect').value;
+  const count = document.getElementById('ticketCount').value;
+  const payment = document.getElementById('paymentChoice').value;
+
+  try {
+    const res = await fetch(`/book?customerId=${customerId}&showId=${showId}&ticketCount=${count}&paymentChoice=${payment}`, {
+      method: 'POST'
+    });
+    
+    const data = await res.json();
+    resDiv.classList.remove('hidden');
+
+    if (res.ok) {
+      resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-emerald-950/70 border-emerald-800 text-emerald-300';
+      resDiv.innerText = `✓ ${data.message || 'Seat reservation successful!'}`;
+      // Refresh customer balances in UI dropdown
+      init();
+    } else {
+      resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
+      resDiv.innerText = `✗ Rejection: ${data.error || 'Booking constraint failed'}`;
+    }
+  } catch (err) {
+    resDiv.classList.remove('hidden');
+    resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
+    resDiv.innerText = `Network/Serialization Error: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Confirm & Allocate Seat Lock';
+  }
+});
       e.preventDefault();
       const btn = document.getElementById('bookBtn');
       const resDiv = document.getElementById('bookingResult');
@@ -141,7 +178,7 @@
         btn.disabled = false;
         btn.innerText = 'Confirm & Allocate Seat Lock';
       }
-    });
+    ;
 
     init();
   </script>

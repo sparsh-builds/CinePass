@@ -122,42 +122,48 @@
     }
 
     document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('bookBtn');
-      const resDiv = document.getElementById('bookingResult');
-      btn.disabled = true;
-      btn.innerText = 'Allocating Seats...';
+  e.preventDefault();
+  const btn = document.getElementById('bookBtn');
+  const resDiv = document.getElementById('bookingResult');
+  btn.disabled = true;
+  btn.innerText = 'Allocating Seats...';
 
-      const customerId = document.getElementById('customerSelect').value;
-      const showId = document.getElementById('showSelect').value;
-      const count = document.getElementById('ticketCount').value;
-      const payment = document.getElementById('paymentChoice').value;
+  const payload = {
+    customerId: parseInt(document.getElementById('customerSelect').value, 10),
+    showId: parseInt(document.getElementById('showSelect').value, 10),
+    ticketCount: parseInt(document.getElementById('ticketCount').value, 10),
+    paymentChoice: parseInt(document.getElementById('paymentChoice').value, 10)
+  };
 
-      try {
-        const res = await fetch(`/book?customerId=${customerId}&showId=${showId}&ticketCount=${count}&paymentChoice=${payment}`, {
-          method: 'POST'
-        });
-        
-        const data = await res.json();
-        resDiv.classList.remove('hidden');
-
-        if (res.ok) {
-          resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-emerald-950/70 border-emerald-800 text-emerald-300';
-          resDiv.innerText = `✓ ${data.message || 'Seat reservation successful!'}`;
-          await init();
-        } else {
-          resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
-          resDiv.innerText = `✗ Rejection: ${data.error || 'Booking constraint failed'}`;
-        }
-      } catch (err) {
-        resDiv.classList.remove('hidden');
-        resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
-        resDiv.innerText = `Network/Serialization Error: ${err.message}`;
-      } finally {
-        btn.disabled = false;
-        btn.innerText = 'Confirm & Allocate Seat Lock';
-      }
+  try {
+    const res = await fetch('/book', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
     });
+    
+    const data = await res.json();
+    resDiv.classList.remove('hidden');
+
+    if (res.ok && data.success) {
+      resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-emerald-950/70 border-emerald-800 text-emerald-300';
+      resDiv.innerText = `✓ ${data.message} (Booking ID: #${data.bookingId} | Remaining Balance: ₹${data.remainingBalance})`;
+      await init();
+    } else {
+      resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
+      resDiv.innerText = `✗ Rejection: ${data.error || 'Server rejected booking request'}`;
+    }
+  } catch (err) {
+    resDiv.classList.remove('hidden');
+    resDiv.className = 'mt-4 text-xs font-mono p-3 rounded border bg-rose-950/70 border-rose-800 text-rose-300';
+    resDiv.innerText = `Network/Serialization Error: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Confirm & Allocate Seat Lock';
+  }
+});
 
     init();
   </script>
